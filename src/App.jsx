@@ -1023,8 +1023,8 @@ export default function App() {
   const [isSaving,         setIsSaving]         = useState(false);
   const [syncError,        setSyncError]        = useState(null);
   
-  // Changed this from true to false for Light Mode default
-  const [isDarkMode,       setIsDarkMode]       = useState(false);
+// Changed this to true for Dark Mode default
+const [isDarkMode,        setIsDarkMode]       = useState(true);
   
   const [allScoredFilter,  setAllScoredFilter]  = useState(false);
 
