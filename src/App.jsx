@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import {
+import { 
   LayoutDashboard, Upload, Award, BookOpen, Building2,
   Eye, EyeOff, Search, X, RefreshCw, Download, Save,
   FileSpreadsheet, CheckCircle2, AlertCircle, Filter,
@@ -11,12 +11,12 @@ import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged }
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: "AIzaSyAgZUtc5aZguYz_MW5zISkuLvDgPmDixfg",
+  authDomain: "meratus-frd-lms-10276.firebaseapp.com",
+  projectId: "meratus-frd-lms-10276",
+  storageBucket: "meratus-frd-lms-10276.firebasestorage.app",
+  messagingSenderId: "845694770386",
+  appId: "1:845694770386:web:f103c31b21d082c8fd610b",
 };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -987,7 +987,7 @@ const GlobalSuggestionInput = ({ value, setValue, placeholder, list, icon: Icon,
       </div>
       {isOpen && (
         <div className={`absolute z-50 left-0 right-0 mt-2 ${tc.gsiDropdown} border rounded-xl max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2`}>
-          {list.filter(i => i.toLowerCase().includes(value.toLowerCase())).slice(0, 30).map((item, i) => (
+          {list.filter((i) => i.toLowerCase().includes(value.toLowerCase())).slice(0, 30).map((item, i) => (
             <button key={i} type="button"
               className={`w-full text-left px-4 py-2.5 text-xs font-medium transition-colors border-b last:border-0 ${tc.gsiItem}`}
               onClick={(e) => { e.preventDefault(); setValue(item); setIsOpen(false); }}
@@ -995,7 +995,7 @@ const GlobalSuggestionInput = ({ value, setValue, placeholder, list, icon: Icon,
               {item}
             </button>
           ))}
-          {list.filter(i => i.toLowerCase().includes(value.toLowerCase())).length === 0 && (
+          {list.filter((i) => i.toLowerCase().includes(value.toLowerCase())).length === 0 && (
             <div className={`px-4 py-3 text-xs font-medium italic text-center ${tc.gsiNoMatch}`}>No match found</div>
           )}
         </div>
@@ -1055,7 +1055,7 @@ const [isDarkMode,        setIsDarkMode]       = useState(true);
     if (!user) return;
     const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', 'dashboard', 'tsv_data');
     const unsub = onSnapshot(ref,
-      snap => { if (snap.exists() && snap.data().tsvData) setRawData(snap.data().tsvData); setIsLoadingData(false); setSyncError(null); },
+      (snap) => { if (snap.exists() && snap.data().tsvData) setRawData(snap.data().tsvData); setIsLoadingData(false); setSyncError(null); },
       ()    => { setSyncError('Sync Fail'); setIsLoadingData(false); }
     );
     return () => unsub();
@@ -1144,10 +1144,10 @@ const [isDarkMode,        setIsDarkMode]       = useState(true);
       if (d._hasSME)    sme++;
       if (d._hasAcademy) acd++;
     });
-    const avg = arr => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(2) : '0';
+    const avg = (arr) => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(2) : '0';
     const sbuSummary = Object.values(sbuMap)
-      .map(s => ({ ...s, avg: s.valid>0?parseFloat((s.sum/s.valid).toFixed(2)):0, completeness: s.total>0?((s.valid/s.total)*100).toFixed(1):'0' }))
-      .sort((a,b) => b.avg-a.avg);
+      .map((s) => ({ ...s, avg: s.valid>0?parseFloat((s.sum/s.valid).toFixed(2)):0, completeness: s.total>0?((s.valid/s.total)*100).toFixed(1):'0' }))
+      .sort((a, b) => b.avg-a.avg);
     scores.sort((a,b) => a.score-b.score);
     return {
       total: data.length, scored: scores.length, pending, pass, refine,
@@ -1226,6 +1226,52 @@ const [isDarkMode,        setIsDarkMode]       = useState(true);
     a.click();
   };
 
+  const handleExportExcel = () => {
+    if (tableData.length === 0) return;
+    
+    const headers = [
+      'No', 'Training Topic', 'Status', 'Group SBU/SFU', 'HRBP Name', 
+      'Total Score', 'Theory', 'Accuracy', 'Relevance', 'Practical', 
+      'Visual', 'Evaluation', 'Q&A'
+    ];
+    
+    const escapeCSV = (val) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val);
+      return `"${str.replace(/"/g, '""')}"`;
+    };
+
+    const csvRows = [headers.join(',')];
+
+    tableData.forEach((row) => {
+      const rowData = [
+        escapeCSV(row['NO'] || row['No'] || '-'),
+        escapeCSV(row['Training Topic'] || '-'),
+        escapeCSV(row._normStatus || '-'),
+        escapeCSV(row['Group SBU/SFU'] || '-'),
+        escapeCSV(getHrbp(row) || '-'),
+        escapeCSV(row._TotalScore),
+        escapeCSV(row._Theory),
+        escapeCSV(row._Accuracy),
+        escapeCSV(row._Relevance),
+        escapeCSV(row._Practical),
+        escapeCSV(row._Visual),
+        escapeCSV(row._Eval),
+        escapeCSV(row._QA)
+      ];
+      csvRows.push(rowData.join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob(["\ufeff" + csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Meratus_CCT_Detail_Export_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleDownloadPDF = async () => {
     const el = document.getElementById('pdf-one-pager');
     if (!el) return;
@@ -1252,7 +1298,7 @@ const [isDarkMode,        setIsDarkMode]       = useState(true);
   const clearAllFilters = () => { setTopicFilter(''); setSbuFilter(''); setHrbpFilter(''); setCompleteSbuOnly(false); setAllScoredFilter(false); };
   const allScoredCount = useMemo(() => parsedData.filter(d=>d._hasHRBP&&d._hasSME&&d._hasAcademy).length, [parsedData]);
 
-  const getSubScoreStyle = score => {
+  const getSubScoreStyle = (score) => {
     if (!score||score==='-') return tc.subScoreNormal;
     return parseFloat(score)<8 ? tc.subScoreLow : tc.subScoreNormal;
   };
@@ -1571,10 +1617,10 @@ const [isDarkMode,        setIsDarkMode]       = useState(true);
                   <div className={`flex items-center gap-2 mr-2 border-r pr-4 overflow-visible ${tc.divider}`}>
                     <MultiSelectDropdown label="Score" tc={tc}
                       options={[{id:'all',label:'All Score'},{id:'pass',label:'Score ≥ 8'},{id:'refine',label:'Score < 8'}]}
-                      selectedValues={scoreFilters} onToggle={id=>handleToggleFilter(id,scoreFilters,setScoreFilters)}/>
+                      selectedValues={scoreFilters} onToggle={(id)=>handleToggleFilter(id,scoreFilters,setScoreFilters)}/>
                     <MultiSelectDropdown label="Evaluator" tc={tc}
                       options={[{id:'all',label:'All Evaluators'},{id:'hrbp',label:'Has HRBP Score'},{id:'sme',label:'Has SME Score'},{id:'academy',label:'Has Academy Score'},{id:'all_completed',label:'All Roles Completed'}]}
-                      selectedValues={evaluatorFilters} onToggle={id=>handleToggleFilter(id,evaluatorFilters,setEvaluatorFilters)}/>
+                      selectedValues={evaluatorFilters} onToggle={(id)=>handleToggleFilter(id,evaluatorFilters,setEvaluatorFilters)}/>
                     <select value={sortOrder} onChange={e=>setSortOrder(e.target.value)}
                       className={`border text-[10px] font-bold uppercase rounded-lg px-2 py-2 outline-none focus:ring-2 focus:ring-blue-500 h-[34px] ${tc.ddSelectCls}`}>
                       <option value="none">Sort: Default</option>
@@ -1589,9 +1635,14 @@ const [isDarkMode,        setIsDarkMode]       = useState(true);
                   <button onClick={()=>setShowDetails(!showDetails)} className={`text-[11px] font-bold flex items-center gap-2 uppercase tracking-widest transition-all px-4 py-2 rounded-xl ${tc.detailToggle(showDetails)}`}>
                     {showDetails?<EyeOff size={14}/>:<Eye size={14}/>} {showDetails?'Compact View':'Detail View'}
                   </button>
-                  <button onClick={handleExportTable} className={`text-[11px] font-bold flex items-center gap-2 uppercase tracking-widest transition-all px-4 py-2 rounded-xl shadow-sm ${tc.exportBtn}`}>
-                    <Download size={14}/> Export Data
-                  </button>
+                  <div className={`flex items-center gap-2 pl-2 ml-1 border-l ${tc.divider}`}>
+                    <button onClick={handleExportExcel} className={`text-[11px] font-bold flex items-center gap-2 uppercase tracking-widest transition-all px-4 py-2 rounded-xl shadow-sm ${tc.exportBtn}`} title="Export to Excel (CSV)">
+                      <FileSpreadsheet size={14}/> Excel
+                    </button>
+                    <button onClick={handleExportTable} className={`text-[11px] font-bold flex items-center gap-2 uppercase tracking-widest transition-all px-4 py-2 rounded-xl shadow-sm ${isDarkMode?'bg-slate-800 text-slate-300 hover:bg-slate-700':'bg-white text-slate-600 border hover:bg-slate-50'}`} title="Export Raw TSV">
+                      <Download size={14}/> TSV
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1628,7 +1679,7 @@ const [isDarkMode,        setIsDarkMode]       = useState(true);
                       const link = resolveLink(row['Training Topic']);
                       return (
                         <tr key={idx} className={`transition-colors group ${idx%2===1?tc.tableRowAlt:''} ${tc.tableRowHover}`}>
-                          <td className={`px-6 py-4 text-xs font-semibold whitespace-nowrap ${tc.tableCellMuted}`}>{row['NO']||'-'}</td>
+                          <td className={`px-6 py-4 text-xs font-semibold whitespace-nowrap ${tc.tableCellMuted}`}>{row['NO']||row['No']||'-'}</td>
                           <td className="px-6 py-4">
                             {link
                               ? <a href={link} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-blue-400 hover:text-blue-300 hover:underline line-clamp-2 transition-colors" title={row['Training Topic']}>{row['Training Topic']||'-'}</a>
